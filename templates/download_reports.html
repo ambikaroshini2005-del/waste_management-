@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Waste Reports</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .reports-container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-left: 4px solid #2196F3;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .report-item:hover {
+            background: #f0f7ff;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+        }
+
+        .report-info {
+            flex: 1;
+        }
+
+        .report-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .report-size {
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .no-files {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #2196F3;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: #1976D2;
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="header" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+        <h1><i class="fas fa-file-pdf"></i> Download Waste Reports</h1>
+        <a href="{{ url_for('landing') }}" class="back-link" style="color: white;">
+            <i class="fas fa-arrow-left"></i> Back to Home
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="reports-container">
+            <div class="header">
+                <h2><i class="fas fa-list"></i> Available Reports</h2>
+                <p style="color: #666;">Click the button below to download existing waste report PDFs</p>
+            </div>
+
+            {% if reports %}
+            <div>
+                {% for report in reports %}
+                <div class="report-item">
+                    <div class="report-info">
+                        <div class="report-name">
+                            <i class="fas fa-file-pdf" style="color: #FF5252;"></i>
+                            {{ report.name }}
+                        </div>
+                        <div class="report-size">
+                            📦 Size: {{ report.size_mb }} MB | 📅 Modified: {{ report.modified }}
+                        </div>
+                    </div>
+                    <a href="/download/{{ report.name }}" class="download-btn">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-files">
+                <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                <p>No waste report files found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

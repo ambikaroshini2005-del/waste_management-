@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Dashboard - Waste Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-building"></i> Management Dashboard</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('landing') }}" class="nav-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <a href="{{ url_for('available_reports') }}" class="export-btn" style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);">
+                <i class="fas fa-archive"></i> Download Existing Reports
+            </a>
+            <a href="{{ url_for('waste_pickup') }}" class="export-btn pickup-btn">
+                <i class="fas fa-truck"></i> Waste Pickup Tracking
+            </a>
+            <a href="{{ url_for('management') }}" class="export-btn mgmt-submit-btn">
+                <i class="fas fa-plus-circle"></i> Submit Collection
+            </a>
+            <button class="export-btn" onclick="downloadAllReports()">
+                <i class="fas fa-download"></i> Download All Reports
+            </button>
+            <button class="export-btn email-btn" onclick="emailAllReports()">
+                <i class="fas fa-envelope"></i> Email All Reports
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><i class="fas fa-file-alt"></i> Total Submissions</h3>
+                <div class="stat-value">{{ stats.total_reports }}</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-trash"></i> Waste Types</h3>
+                <div class="stat-value">{{ stats.waste_categories|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-check-circle"></i> Collected</h3>
+                <div class="stat-value">{{ stats.collected_count }}</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-clock"></i> Pending</h3>
+                <div class="stat-value">{{ stats.pending_count }}</div>
+            </div>
+        </div>
+
+        <!-- Waste Distribution Chart -->
+        <div class="charts-section">
+            <h2><i class="fas fa-chart-pie"></i> Waste Distribution by Category</h2>
+            <div class="waste-categories">
+                {% for category, count in stats.waste_categories.items() %}
+                <div class="category-bar">
+                    <span class="category-name">{{ category.upper() }}</span>
+                    <div class="bar-container">
+                        <div class="bar" style="width: {{ (count / stats.total_reports * 100) if stats.total_reports > 0 else 0 }}%"></div>
+                    </div>
+                    <span class="category-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+                {% if stats.waste_categories|length == 0 %}
+                <p class="no-data">No waste reports yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- All User Submissions Table -->
+        <div class="reports-section">
+            <h2><i class="fas fa-list"></i> User Waste Submissions</h2>
+            <div class="reports-table">
+                {% if reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User Name</th>
+                            <th>Email</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Rewards</th>
+                            <th>Submitted</th>
+                            <th>Collection Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports|reverse %}
+                        <tr>
+                            <td><strong>{{ report.user_name }}</strong></td>
+                            <td>{{ report.user_email }}</td>
+                            <td><span class="badge">{{ report.waste_category.upper() }}</span></td>
+                            <td>{{ report.waste_type }}</td>
+                            <td>
+                                <small>{{ report.latitude }},<br>{{ report.longitude }}</small>
+                            </td>
+                            <td><span class="reward">+{{ report.reward_points }}</span></td>
+                            <td>
+                                <small>{{ report.timestamp }}</small>
+                            </td>
+                            <td>
+                                {% if report.collected %}
+                                <span class="collection-status collected">
+                                    <i class="fas fa-check-circle"></i> Collected
+                                </span>
+                                {% else %}
+                                <span class="collection-status pending">
+                                    <i class="fas fa-hourglass-half"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons-inline">
+                                    <a href="/submission/{{ loop.revindex0 }}" class="btn-small" style="text-decoration: none; display: inline-flex;">
+                                        <i class="fas fa-eye"></i> View Full
+                                    </a>
+                                    <button class="btn-small" onclick="downloadUserReport('{{ report.user_email }}', '{{ report.user_name }}')">
+                                        <i class="fas fa-download"></i> Download
+                                    </button>
+                                    <button class="btn-small email" onclick="emailUserReport('{{ report.user_email }}', '{{ report.user_name }}')">
+                                        <i class="fas fa-envelope"></i> Email
+                                    </button>
+                                    {% if report.image_filename %}
+                                    <button class="btn-small view" onclick="viewImageModal('{{ url_for('static', filename='uploads/' + report.image_filename) }}')">
+                                        <i class="fas fa-image"></i> Image
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-data">No user submissions yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Collection History -->
+        {% if collections %}
+        <div class="collections-section">
+            <h2><i class="fas fa-truck"></i> Collection Records</h2>
+            <div class="collections-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Management Name</th>
+                            <th>Waste Type</th>
+                            <th>Quantity</th>
+                            <th>Location</th>
+                            <th>Contact Person</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for collection in collections|reverse %}
+                        <tr>
+                            <td><strong>{{ collection.management_name }}</strong></td>
+                            <td>{{ collection.waste_type }}</td>
+                            <td>{{ collection.quantity }} {{ collection.unit }}</td>
+                            <td><small>{{ collection.latitude }}, {{ collection.longitude }}</small></td>
+                            <td>{{ collection.contact_person }}</td>
+                            <td><small>{{ collection.timestamp }}</small></td>
+                            <td>
+                                <span class="badge" style="background-color: #FFC107; color: #333;">{{ collection.status }}</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeImageModal()">&times;</span>
+            <img id="modalImage" src="" alt="Waste Image" style="width: 100%; max-height: 600px; border-radius: 8px;">
+        </div>
+    </div>
+
+    <style>
+        .action-buttons-inline {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border: none;
+            border-radius: 4px;
+            background: #2196F3;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-small:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .btn-small.email {
+            background: #FF9800;
+        }
+
+        .btn-small.email:hover {
+            background: #F57C00;
+        }
+
+        .btn-small.view {
+            background: #4CAF50;
+        }
+
+        .btn-small.view:hover {
+            background: #45a049;
+        }
+
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 800px;
+            width: 90%;
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #aaa;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .collections-section {
+            margin-top: 40px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .collections-table table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .collections-table th,
+        .collections-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .collections-table th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 1024px) {
+            .action-buttons-inline {
+                flex-direction: column;
+            }
+
+            .btn-small {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+
+    <script>
+        function downloadAllReports() {
+            fetch('/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'download'
+                })
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `all_waste_reports_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => alert('Error downloading reports: ' + error.message));
+        }
+
+        function emailAllReports() {
+            const email = prompt('Enter email to send all reports to:');
+            if (!email) return;
+
+            fetch('/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'email',
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Reports emailed successfully!');
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function downloadUserReport(email, userName) {
+            const btn = event.target.closest('.btn-small');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+            
+            fetch('/user-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    action: 'download'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to generate PDF');
+                    });
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                if (blob.size === 0) {
+                    throw new Error('PDF file is empty');
+                }
+                
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `report_${userName}_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(link);
+                
+                setTimeout(() => {
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 100);
+            })
+            .catch(error => {
+                alert('❌ Error downloading PDF: ' + error.message);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
+        }
+
+        function emailUserReport(email, userName) {
+            fetch('/user-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    action: 'email'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+
+        function viewImageModal(imagePath) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imagePath;
+            modal.style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Based Smart Waste Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-leaf"></i> Smart Waste Management System</h1>
+        <p class="subtitle">AI-Powered Real-Time Waste Classification & Reporting</p>
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+            <i class="fas fa-chart-bar"></i> Dashboard
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="info-section">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <i class="fas fa-image"></i>
+                    <h3>Image/Video Upload</h3>
+                    <p>Capture waste images or videos for classification</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Location Tracking</h3>
+                    <p>Real-time GPS coordinates capture</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-bell"></i>
+                    <h3>Notifications</h3>
+                    <p>Auto-notify nearby waste management</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-gift"></i>
+                    <h3>Rewards</h3>
+                    <p>Earn points for waste reporting</p>
+                </div>
+            </div>
+        </div>
+
+        <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" id="upload-form">
+            <div class="form-section">
+                <h2>Report Waste</h2>
+                
+                <div class="form-group">
+                    <label for="user_name"><i class="fas fa-user"></i> Your Name</label>
+                    <input type="text" name="user_name" id="user_name" placeholder="Enter your name" required>
+                </div>
+
+                <!-- Hidden email field - populated automatically -->
+                <input type="hidden" name="user_email" id="user_email" value="">
+
+                <div class="location-section">
+                    <h3><i class="fas fa-map-pin"></i> Location</h3>
+                    <p class="info-text">Click to get your current location</p>
+                    <button type="button" class="btn-location" onclick="getLocation()">
+                        <i class="fas fa-location-crosshairs"></i> Get My Location
+                    </button>
+                    <div class="location-display">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="text" name="latitude" id="latitude" placeholder="Latitude" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="text" name="longitude" id="longitude" placeholder="Longitude" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="upload-container" id="drop-zone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <input type="file" name="file" id="file" accept=".png,.jpg,.jpeg,.mp4,.avi,.mov,.mkv,.webm" required>
+                    <label for="file"><i class="fas fa-image"></i> Choose Waste Image or Video</label>
+                    <p class="drag-text">or drag and drop your waste image/video here</p>
+                    <p style="font-size: 12px; color: #999; margin-top: 0.5rem;">Supported: PNG, JPG, JPEG, MP4, AVI, MOV, MKV, WebM</p>
+                    <p id="file-name" style="margin-top: 1rem; color: #666;">No file selected</p>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-check-circle"></i> Submit Waste Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Set default email for notifications
+        document.getElementById('user_email').value = 'waste.management.system@local.com';
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        document.getElementById('latitude').value = position.coords.latitude.toFixed(4);
+                        document.getElementById('longitude').value = position.coords.longitude.toFixed(4);
+                        alert('Location captured: ' + position.coords.latitude.toFixed(4) + ', ' + position.coords.longitude.toFixed(4));
+                    },
+                    function(error) {
+                        alert('Error getting location: ' + error.message);
+                        // Set mock coordinates for testing
+                        document.getElementById('latitude').value = '13.0827';
+                        document.getElementById('longitude').value = '80.2707';
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+                document.getElementById('latitude').value = '13.0827';
+                document.getElementById('longitude').value = '80.2707';
+            }
+        }
+
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file');
+        const fileName = document.getElementById('file-name');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, unhighlight, false);
+        });
+
+        dropZone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFileSelect, false);
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight(e) {
+            dropZone.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            dropZone.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                updateFileName(files[0].name);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length) {
+                updateFileName(files[0].name);
+            }
+        }
+
+        function updateFileName(name) {
+            fileName.textContent = name;
+            fileName.classList.add('file-selected');
+        }
+    </script>
+</body>
+</html> 

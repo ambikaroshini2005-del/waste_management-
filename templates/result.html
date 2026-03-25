@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste Report - Success</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-check-circle" style="color: #4CAF50;"></i> Report Submitted Successfully!</h1>
+    </div>
+
+    <div class="container">
+        <div class="result-container">
+            <div class="result-image">
+                <img src="{{ url_for('static', filename=image_path.split('/')[-2] + '/' + image_path.split('/')[-1]) }}" alt="Uploaded waste image">
+            </div>
+
+            <div class="result-details">
+                <h2>Waste Classification Result</h2>
+                
+                <div class="result-item">
+                    <span class="label"><i class="fas fa-tag"></i> Category:</span>
+                    <span class="value category">{{ category.upper() }}</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="label"><i class="fas fa-leaf"></i> Type:</span>
+                    <span class="value">{{ waste_type }}</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="label"><i class="fas fa-user"></i> Reporter:</span>
+                    <span class="value">{{ user_name }}</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="label"><i class="fas fa-map-pin"></i> Location:</span>
+                    <span class="value">{{ latitude }}, {{ longitude }}</span>
+                </div>
+
+                <div class="rewards-box">
+                    <h3><i class="fas fa-gift"></i> Rewards Earned</h3>
+                    <div class="reward-points">
+                        <div class="points-earned">+{{ reward_points }} pts</div>
+                        <div class="points-total">Total: {{ total_rewards }} pts</div>
+                    </div>
+                </div>
+
+                <div class="notification-box">
+                    <h3><i class="fas fa-bell"></i> Notifications Sent</h3>
+                    <p><strong>{{ organizations_notified }}</strong> waste management organizations have been notified</p>
+                    <p class="notification-message">{{ notification }}</p>
+                </div>
+
+                <div class="email-box">
+                    <h3><i class="fas fa-envelope"></i> System Status</h3>
+                    <p style="color: #4CAF50;"><strong>✅ Report processed and saved</strong></p>
+                    <p style="font-size: 0.9rem; color: #666;">Your waste report has been recorded in the system.</p>
+                </div>
+
+                <div class="status-box">
+                    <h3><i class="fas fa-info-circle"></i> Collection Status</h3>
+                    <div class="status-item">
+                        <span><i class="fas fa-circle" style="color: #4CAF50;"></i> Status: Reported</span>
+                    </div>
+                    <div class="status-item">
+                        <span><i class="fas fa-circle" style="color: #2196F3;"></i> Notifications: Sent</span>
+                    </div>
+                    <div class="status-item">
+                        <span><i class="fas fa-circle" style="color: #FF9800;"></i> Collection: Pending</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn-primary" onclick="downloadUserPDF('{{ user_name }}', '{{ user_email }}')">
+                <i class="fas fa-download"></i> Download My Report PDF
+            </button>
+            <a href="{{ url_for('home') }}" class="btn-primary">
+                <i class="fas fa-plus"></i> Report Another Waste
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn-secondary">
+                <i class="fas fa-chart-bar"></i> View Dashboard
+            </a>
+        </div>
+    </div>
+
+    <style>
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+        
+        .result-item .label {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .result-item .value {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .rewards-box, .notification-box, .status-box {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        
+        .reward-points {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .points-earned {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .points-total {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .status-item {
+            padding: 8px 0;
+        }
+    </style>
+
+    <script>
+        function downloadUserPDF(userName, userEmail) {
+            // Request API to generate and download personal PDF
+            fetch('/user-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    action: 'download'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.message || 'Failed to generate PDF');
+                    });
+                }
+            })
+            .then(blob => {
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `waste_report_${userName}_${new Date().toISOString().slice(0,10)}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            })
+            .catch(error => {
+                alert('Error downloading PDF: ' + error.message);
+            });
+        }
+    </script>
+</body>
+</html> 

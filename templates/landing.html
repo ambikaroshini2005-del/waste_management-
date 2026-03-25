@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Waste Management System - Welcome</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .landing-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .landing-header {
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .landing-header h1 {
+            font-size: 3.5rem;
+            margin: 0;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .landing-header p {
+            font-size: 1.3rem;
+            margin-top: 15px;
+            opacity: 0.95;
+        }
+
+        .choice-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .choice-card {
+            background: white;
+            color: #333;
+            padding: 40px;
+            border-radius: 15px;
+            min-width: 280px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .choice-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .choice-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #667eea;
+        }
+
+        .choice-card h2 {
+            margin: 15px 0;
+            font-size: 1.8rem;
+        }
+
+        .choice-card p {
+            color: #666;
+            line-height: 1.6;
+            margin: 10px 0 25px 0;
+            min-height: 60px;
+        }
+
+        .choice-card .btn-enter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .choice-card .btn-enter:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .features-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 60px;
+            max-width: 800px;
+            animation: fadeIn 1.2s ease;
+        }
+
+        .features-info h3 {
+            margin-top: 0;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+
+        .feature-item i {
+            font-size: 1.5rem;
+            color: #FFD700;
+            flex-shrink: 0;
+        }
+
+        .feature-item span {
+            font-size: 0.95rem;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .landing-header h1 {
+                font-size: 2.5rem;
+            }
+
+            .landing-header p {
+                font-size: 1.1rem;
+            }
+
+            .choice-container {
+                gap: 20px;
+                flex-direction: column;
+            }
+
+            .choice-card {
+                min-width: 250px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0; background: #f0f0f0;">
+    <div class="landing-container">
+        <div class="landing-header">
+            <h1><i class="fas fa-leaf"></i> Smart Waste Management</h1>
+            <p>Welcome to our AI-powered waste classification system</p>
+        </div>
+
+        <div class="choice-container">
+            <!-- User Section -->
+            <a href="{{ url_for('home') }}" class="choice-card" style="border-top: 5px solid #4CAF50;">
+                <div class="choice-icon" style="color: #4CAF50;">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h2>User Portal</h2>
+                <p>Submit waste reports, upload images/videos, earn rewards, and track your contributions</p>
+                <button class="btn-enter" style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);">
+                    <i class="fas fa-arrow-right"></i> Enter as User
+                </button>
+            </a>
+
+            <!-- Management Section -->
+            <a href="{{ url_for('management_dashboard') }}" class="choice-card" style="border-top: 5px solid #2196F3;">
+                <div class="choice-icon" style="color: #2196F3;">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h2>Management Portal</h2>
+                <p>View all user submissions, manage collections, download reports, and track waste</p>
+                <button class="btn-enter" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                    <i class="fas fa-arrow-right"></i> Enter as Management
+                </button>
+            </a>
+        </div>
+
+        <div class="features-info">
+            <h3><i class="fas fa-star"></i> Key Features</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="fas fa-image"></i>
+                    <span><strong>Image/Video Upload</strong> - Submit waste photos or videos for instant classification</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-map-pin"></i>
+                    <span><strong>GPS Tracking</strong> - Automatic location capture for waste reporting</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-file-pdf"></i>
+                    <span><strong>PDF Reports</strong> - Generate and download detailed waste reports with images</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-gift"></i>
+                    <span><strong>Rewards System</strong> - Earn points for each waste submission</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-envelope"></i>
+                    <span><strong>Email Notifications</strong> - Auto-send reports to users and management</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span><strong>Status Tracking</strong> - Monitor waste collection status in real-time</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

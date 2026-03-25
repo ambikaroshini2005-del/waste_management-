@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submission Details - {{ user_name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .submission-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 20px;
+        }
+
+        .submission-header h1 {
+            margin: 0;
+            color: #333;
+            font-size: 2rem;
+        }
+
+        .submission-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .badge-collected {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge-pending {
+            background: #FF9800;
+            color: white;
+        }
+
+        .submission-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .submission-image {
+            text-align: center;
+        }
+
+        .submission-image img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .submission-details {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .detail-section {
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            border-radius: 4px;
+        }
+
+        .detail-section h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .detail-value {
+            color: #333;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .classification-result {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .classification-result .category {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .classification-result .type {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .rewards-section {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .rewards-points {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 8px;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-email {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+
+        .btn-email:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .submission-content {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-file-alt"></i> Waste Submission Details</h1>
+    </div>
+
+    <div class="container">
+        <div class="submission-container">
+            <!-- Header -->
+            <div class="submission-header">
+                <div>
+                    <h1>{{ user_name }}'s Submission</h1>
+                    <p style="color: #666; margin: 5px 0;">{{ timestamp }}</p>
+                </div>
+                <div>
+                    {% if collected %}
+                    <span class="submission-badge badge-collected">
+                        <i class="fas fa-check-circle"></i> COLLECTED
+                    </span>
+                    {% else %}
+                    <span class="submission-badge badge-pending">
+                        <i class="fas fa-hourglass-half"></i> PENDING
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="submission-content">
+                <!-- Image -->
+                <div class="submission-image">
+                    <h2><i class="fas fa-image"></i> Submitted Waste Image</h2>
+                    {% if image_path %}
+                    <img src="{{ url_for('static', filename='uploads/' + image_path.split('/')[-1]) }}" alt="Waste image">
+                    {% else %}
+                    <div style="padding: 40px; background: #eee; border-radius: 8px;">
+                        <p><i class="fas fa-image" style="font-size: 2rem; color: #999;"></i></p>
+                        <p style="color: #999;">No image available</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Details -->
+                <div class="submission-details">
+                    <!-- Classification -->
+                    <div class="classification-result">
+                        <div style="font-size: 0.9rem; opacity: 0.9;">WASTE CLASSIFICATION</div>
+                        <div class="category">{{ category.upper() }}</div>
+                        <div class="type"><i class="fas fa-leaf"></i> {{ waste_type }}</div>
+                    </div>
+
+                    <!-- Rewards -->
+                    <div class="rewards-section">
+                        <div style="font-size: 0.9rem; opacity: 0.9;">REWARDS EARNED</div>
+                        <div class="rewards-points">+{{ reward_points }} pts</div>
+                    </div>
+
+                    <!-- User Info -->
+                    <div class="detail-section">
+                        <h3><i class="fas fa-user-circle"></i> User Information</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span class="detail-value">{{ user_name }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">{{ user_email }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="detail-section">
+                        <h3><i class="fas fa-map-pin"></i> Location</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Coordinates:</span>
+                            <span class="detail-value">{{ latitude }}, {{ longitude }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Organizations Notified:</span>
+                            <span class="detail-value">{{ organizations_notified }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Collection Info (if collected) -->
+                    {% if collected %}
+                    <div class="detail-section" style="border-left-color: #4CAF50; background: #f0f8f5;">
+                        <h3><i class="fas fa-check-circle" style="color: #4CAF50;"></i> Collection Information</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" style="color: #4CAF50; font-weight: bold;">✓ COLLECTED</span>
+                        </div>
+                        {% if report.collected_by %}
+                        <div class="detail-item">
+                            <span class="detail-label">Collected By:</span>
+                            <span class="detail-value">{{ report.collected_by }}</span>
+                        </div>
+                        {% endif %}
+                        {% if report.collection_date %}
+                        <div class="detail-item">
+                            <span class="detail-label">Collection Date:</span>
+                            <span class="detail-value">{{ report.collection_date }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="detail-section" style="border-left-color: #FF9800; background: #fff8f0;">
+                        <h3><i class="fas fa-hourglass-half" style="color: #FF9800;"></i> Collection Status</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" style="color: #FF9800; font-weight: bold;">⏳ PENDING COLLECTION</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Awaiting:</span>
+                            <span class="detail-value">Waste collection organization</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-btn btn-download" onclick="downloadPDF()">
+                    <i class="fas fa-download"></i> Download PDF Report
+                </button>
+                <button class="action-btn btn-email" onclick="emailReport()">
+                    <i class="fas fa-envelope"></i> Email Report
+                </button>
+                <a href="{{ url_for('management_dashboard') }}" class="action-btn btn-back">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            const submissionId = {{ submission_id }};
+            const btn = event.target.closest('.action-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating PDF...';
+            btn.disabled = true;
+            
+            fetch(`/submission/${submissionId}/download-pdf`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || `Error: ${response.status}`);
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    if (blob.size === 0) {
+                        throw new Error('PDF file is empty or corrupted');
+                    }
+                    
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `report_{{ user_name }}_{{ submission_id }}.pdf`;
+                    document.body.appendChild(link);
+                    
+                    // Give browser time to create the download
+                    setTimeout(() => {
+                        link.click();
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                        
+                        // Restore button
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 100);
+                })
+                .catch(error => {
+                    console.error('Download error:', error);
+                    alert('❌ Error downloading PDF: ' + error.message);
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+        }
+
+        function emailReport() {
+            const email = "{{ user_email }}";
+            if (!email || email === 'N/A') {
+                alert('No email address on file for this submission');
+                return;
+            }
+
+            fetch('/user-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: email,
+                    action: 'email'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ Report emailed successfully!');
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+        }
+    </script>
+</body>
+</html>

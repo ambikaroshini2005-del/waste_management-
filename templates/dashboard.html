@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Waste Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-chart-bar"></i> Smart Waste Management Dashboard</h1>
+        <div class="header-actions">
+            <a href="{{ url_for('landing') }}" class="nav-link">
+                <i class="fas fa-arrow-left"></i> Back to Home
+            </a>
+            <a href="{{ url_for('waste_pickup') }}" class="export-btn pickup-btn">
+                <i class="fas fa-truck"></i> Waste Pickup Tracking
+            </a>
+            <a href="{{ url_for('management') }}" class="export-btn mgmt-submit-btn">
+                <i class="fas fa-plus-circle"></i> Submit Collection
+            </a>
+            <button class="export-btn personal-btn" onclick="getPersonalReport()">
+                <i class="fas fa-user-circle"></i> My Report
+            </button>
+            <button class="export-btn" onclick="downloadPDF()">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+            <button class="export-btn email-btn" onclick="emailPDF()">
+                <i class="fas fa-envelope"></i> Email Report
+            </button>
+            <button class="export-btn mgmt-btn" onclick="sendToManagement()">
+                <i class="fas fa-building"></i> Send to Management
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><i class="fas fa-file-alt"></i> Total Reports</h3>
+                <div class="stat-value">{{ stats.total_reports }}</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-gift"></i> Total Rewards</h3>
+                <div class="stat-value">{{ stats.total_rewards }}</div>
+                <div class="stat-unit">points</div>
+            </div>
+            <div class="stat-card">
+                <h3><i class="fas fa-trash"></i> Waste Categories</h3>
+                <div class="stat-value">{{ stats.waste_categories|length }}</div>
+            </div>
+        </div>
+
+        <div class="charts-section">
+            <h2><i class="fas fa-chart-pie"></i> Waste Distribution</h2>
+            <div class="waste-categories">
+                {% for category, count in stats.waste_categories.items() %}
+                <div class="category-bar">
+                    <span class="category-name">{{ category.upper() }}</span>
+                    <div class="bar-container">
+                        <div class="bar" style="width: {{ (count / stats.total_reports * 100) if stats.total_reports > 0 else 0 }}%"></div>
+                    </div>
+                    <span class="category-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+                {% if stats.waste_categories|length == 0 %}
+                <p class="no-data">No waste reports yet</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="reports-section">
+            <h2><i class="fas fa-list"></i> Recent Reports</h2>
+            <div class="reports-table">
+                {% if reports %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Reporter</th>
+                            <th>Category</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Points</th>
+                            <th>Status</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports|reverse %}
+                        <tr>
+                            <td>{{ report.user_name }}</td>
+                            <td><span class="badge">{{ report.waste_category.upper() }}</span></td>
+                            <td>{{ report.waste_type }}</td>
+                            <td>{{ report.latitude }}, {{ report.longitude }}</td>
+                            <td><span class="reward">+{{ report.reward_points }}</span></td>
+                            <td>
+                                {% if report.collected %}
+                                <span class="collection-status collected">
+                                    <i class="fas fa-check-circle"></i> Collected
+                                </span>
+                                {% else %}
+                                <span class="collection-status pending">
+                                    <i class="fas fa-hourglass-end"></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="timestamp">{{ report.timestamp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="no-data">No waste reports yet. <a href="{{ url_for('home') }}">Start reporting!</a></p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="management-section">
+            <h2><i class="fas fa-building"></i> Management Collections</h2>
+            {% if collections %}
+            <div class="management-stats">
+                <div class="mgmt-stat-card">
+                    <h4><i class="fas fa-file-import"></i> Total Collections</h4>
+                    <div class="mgmt-stat-value">{{ total_collections }}</div>
+                </div>
+                <div class="mgmt-stat-card">
+                    <h4><i class="fas fa-weight"></i> Total Quantity</h4>
+                    <div class="mgmt-stat-value">{{ "%.2f"|format(total_quantity) }}</div>
+                    <div class="mgmt-stat-unit">units</div>
+                </div>
+                <div class="mgmt-stat-card">
+                    <h4><i class="fas fa-tags"></i> Waste Types</h4>
+                    <div class="mgmt-stat-value">{{ collection_types|length }}</div>
+                </div>
+            </div>
+
+            <div class="collection-types">
+                <h3>Collected by Type</h3>
+                {% for waste_type, count in collection_types.items() %}
+                <div class="type-bar">
+                    <span class="type-name">{{ waste_type.upper() }}</span>
+                    <div class="bar-container">
+                        <div class="bar" style="width: {{ (count / total_collections * 100) if total_collections > 0 else 0 }}%"></div>
+                    </div>
+                    <span class="type-count">{{ count }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="collections-table">
+                <h3>Collection Records</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Organization</th>
+                            <th>Contact Person</th>
+                            <th>Waste Type</th>
+                            <th>Quantity</th>
+                            <th>Location</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for collection in collections|reverse %}
+                        <tr>
+                            <td><strong>{{ collection.management_name }}</strong></td>
+                            <td>{{ collection.contact_person }}</td>
+                            <td><span class="mgmt-badge">{{ collection.waste_type.upper() }}</span></td>
+                            <td>{{ collection.quantity }} {{ collection.unit }}</td>
+                            <td class="location-cell" title="{{ collection.location }}">{{ collection.location[:30] }}{% if collection.location|length > 30 %}...{% endif %}</td>
+                            <td class="timestamp">{{ collection.timestamp }}</td>
+                            <td><span class="status-badge status-{{ collection.status }}">{{ collection.status.upper() }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="no-data"><i class="fas fa-inbox"></i> No management collections yet. <a href="{{ url_for('management') }}">Submit a collection</a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-unit {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .waste-categories {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .category-bar {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            gap: 10px;
+        }
+
+        .category-name {
+            min-width: 100px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 30px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            transition: width 0.3s ease;
+        }
+
+        .category-count {
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .reports-table {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        th {
+            background: #f5f5f5;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .reward {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+        }
+
+        .no-data a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+
+        .no-data a:hover {
+            text-decoration: underline;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .email-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        @media (max-width: 768px) {
+            .header-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .export-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+
+    <script>
+        function downloadPDF() {
+            fetch('/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'download'
+                })
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `waste_report_${new Date().getTime()}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+                alert('✅ PDF downloaded successfully!');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error downloading PDF: ' + error.message);
+            });
+        }
+
+        function emailPDF() {
+            const email = prompt('📧 Enter your email address to receive the report:');
+            if (!email) return;
+
+            if (!email.includes('@')) {
+                alert('⚠️ Please enter a valid email address');
+                return;
+            }
+
+            fetch('/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'email',
+                    email: email
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error sending email: ' + error.message);
+            });
+        }
+
+        function getPersonalReport() {
+            const email = prompt('📧 Enter your email to get your personal waste report:\n\n(Only your submissions will be included)');
+            if (!email) return;
+
+            if (!email.includes('@')) {
+                alert('⚠️ Please enter a valid email address');
+                return;
+            }
+
+            // Show loading
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            btn.disabled = true;
+
+            fetch('/user-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    action: 'email'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                if (data.status === 'success') {
+                    alert('✅ ' + data.message);
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                console.error('Error:', error);
+                alert('❌ Error: ' + error.message);
+            });
+        }
+    </script>
+
+    <script>
+        function sendToManagement() {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            fetch('/export-pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    action: 'email',
+                    email: 'management@wastesystem.local'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+
+                if (data.status === 'success') {
+                    alert('✅ Dashboard report sent to management!\n\n📊 All reports with images are now available for download.');
+                } else {
+                    alert('❌ Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                console.error('Error:', error);
+                alert('❌ Error: ' + error.message);
+            });
+        }
+    </script>
+
+    <style>
+        .personal-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .mgmt-btn {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        /* Management Section Styles */
+        .management-section {
+            margin-top: 50px;
+        }
+
+        .management-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .management-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .mgmt-stat-card {
+            background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .mgmt-stat-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+        }
+
+        .mgmt-stat-value {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .mgmt-stat-unit {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .collection-types {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .collection-types h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .type-bar {
+            display: flex;
+            align-items: center;
+            margin: 12px 0;
+            gap: 10px;
+        }
+
+        .type-name {
+            min-width: 120px;
+            font-weight: 600;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .type-count {
+            min-width: 35px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .collections-table {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .collections-table h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .collections-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .collections-table th {
+            background: #f5f5f5;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+            font-size: 13px;
+        }
+
+        .collections-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .collections-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .mgmt-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #c8e6c9;
+            color: #2e7d32;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .location-cell {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .status-submitted {
+            background: #bbdefb;
+            color: #1565c0;
+        }
+
+        .status-approved {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
+        .status-rejected {
+            background: #ffccbc;
+            color: #d84315;
+        }
+
+        .mgmt-submit-btn {
+            background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+        }
+
+        .mgmt-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .pickup-btn {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+
+        .pickup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .collection-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .collection-status.collected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .collection-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        @media (max-width: 768px) {
+            .management-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .collections-table {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</body>
+</html>

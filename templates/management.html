@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Management Waste Collection - Waste Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #45a049;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .nav-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .nav-link:hover {
+            text-decoration: underline;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        .location-group {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+
+        .location-group p {
+            margin: 0 0 15px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .location-btn {
+            padding: 10px 20px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .location-btn:hover {
+            background: #0b7dda;
+        }
+
+        .location-display {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="{{ url_for('dashboard') }}" class="nav-link">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+        <h1><i class="fas fa-building"></i> Management Waste Collection Submission</h1>
+        <p>Submit waste collection details directly to the system</p>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i> <span id="successText"></span>
+            </div>
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i> <span id="errorText"></span>
+            </div>
+
+            <form id="collectionForm">
+                <h3 style="margin-top: 0; color: #333;">
+                    <i class="fas fa-info-circle"></i> Management Details
+                </h3>
+
+                <div class="form-group">
+                    <label for="management_name">
+                        Management/Organization Name <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="management_name" 
+                        name="management_name" 
+                        placeholder="Enter organization name"
+                        required
+                    >
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contact_person">
+                            Contact Person <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="contact_person" 
+                            name="contact_person" 
+                            placeholder="Full name"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact_phone">Contact Phone</label>
+                        <input 
+                            type="tel" 
+                            id="contact_phone" 
+                            name="contact_phone" 
+                            placeholder="+91 XXXXXXXXXX"
+                        >
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #333;">
+                    <i class="fas fa-trash"></i> Waste Collection Details
+                </h3>
+
+                <div class="form-group">
+                    <label for="waste_type">
+                        Waste Type <span class="required">*</span>
+                    </label>
+                    <select id="waste_type" name="waste_type" required>
+                        <option value="">Select Waste Type</option>
+                        <option value="plastic">Plastic</option>
+                        <option value="paper">Paper</option>
+                        <option value="glass">Glass</option>
+                        <option value="metal">Metal</option>
+                        <option value="organic">Organic/Biodegradable</option>
+                        <option value="mixed">Mixed Waste</option>
+                        <option value="e-waste">E-Waste</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="quantity">
+                            Quantity <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="number" 
+                            id="quantity" 
+                            name="quantity" 
+                            placeholder="0.00"
+                            min="0"
+                            step="0.01"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unit">Unit</label>
+                        <select id="unit" name="unit">
+                            <option value="kg">Kilograms (kg)</option>
+                            <option value="ton">Tons (t)</option>
+                            <option value="bags">Bags</option>
+                            <option value="boxes">Boxes</option>
+                            <option value="liters">Liters (L)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; color: #333;">
+                    <i class="fas fa-map-marker-alt"></i> Location Details
+                </h3>
+
+                <div class="form-group">
+                    <label for="location">
+                        Collection Location <span class="required">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="location" 
+                        name="location" 
+                        placeholder="Enter collection address"
+                        required
+                    >
+                </div>
+
+                <div class="location-group">
+                    <p><i class="fas fa-gps"></i> Get precise GPS coordinates for better tracking</p>
+                    <button type="button" class="location-btn" onclick="getLocation()">
+                        <i class="fas fa-location-crosshairs"></i> Get Current Location
+                    </button>
+                    <div class="location-display" id="locationDisplay" style="display: none;">
+                        <strong>GPS Coordinates:</strong><br>
+                        Latitude: <span id="latitudeDisplay">-</span><br>
+                        Longitude: <span id="longitudeDisplay">-</span>
+                    </div>
+                </div>
+
+                <input type="hidden" id="latitude" name="latitude" value="0.0">
+                <input type="hidden" id="longitude" name="longitude" value="0.0">
+
+                <h3 style="margin-top: 30px; color: #333;">
+                    <i class="fas fa-sticky-note"></i> Additional Notes
+                </h3>
+
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea 
+                        id="notes" 
+                        name="notes" 
+                        placeholder="Any additional information about the collection (optional)"
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-paper-plane"></i> Submit Collection
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Get current location
+        function getLocation() {
+            if (navigator.geolocation) {
+                const btn = event.target.closest('button');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+
+                        document.getElementById('latitude').value = latitude;
+                        document.getElementById('longitude').value = longitude;
+                        document.getElementById('latitudeDisplay').textContent = latitude.toFixed(6);
+                        document.getElementById('longitudeDisplay').textContent = longitude.toFixed(6);
+                        document.getElementById('locationDisplay').style.display = 'block';
+
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Get Current Location';
+                    },
+                    (error) => {
+                        showError('Could not get location: ' + error.message);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-location-crosshairs"></i> Get Current Location';
+                    }
+                );
+            } else {
+                showError('Geolocation is not supported by your browser');
+            }
+        }
+
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            document.getElementById('successText').textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // Handle form submission
+        document.getElementById('collectionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = {
+                management_name: document.getElementById('management_name').value,
+                contact_person: document.getElementById('contact_person').value,
+                contact_phone: document.getElementById('contact_phone').value,
+                waste_type: document.getElementById('waste_type').value,
+                quantity: parseFloat(document.getElementById('quantity').value),
+                unit: document.getElementById('unit').value,
+                location: document.getElementById('location').value,
+                latitude: document.getElementById('latitude').value,
+                longitude: document.getElementById('longitude').value,
+                notes: document.getElementById('notes').value
+            };
+
+            try {
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+                const response = await fetch('/api/submit-collection', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess(data.message);
+                    document.getElementById('collectionForm').reset();
+                    document.getElementById('locationDisplay').style.display = 'none';
+                    
+                    // Redirect to dashboard after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 2000);
+                } else {
+                    showError(data.error || 'Failed to submit collection');
+                }
+
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Collection';
+            } catch (error) {
+                showError('Error: ' + error.message);
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Collection';
+            }
+        });
+    </script>
+</body>
+</html>
